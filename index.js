@@ -7,12 +7,13 @@ const {WebhookClient} = require('dialogflow-fulfillment');
 const {Card, Suggestion} = require('dialogflow-fulfillment');
 const {google} = require('googleapis');
 const axios = require('axios');
+const querystring = require('querystring');
  
 process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements
 
 const serviceAccount = {
-  "private_key": 'YOUR_PRIVATE_KEY',
-  "client_email": 'YOUR_EMAIL_ACCOUNT'
+  "private_key": 'YOUR_SERVICE_ACCOUNT_PRIVATE_KEY',
+  "client_email": 'YOUR_SERVICE_ACCOUNT_EMAIL'
 };
 const sheet_id = 'YOUR_SHEET_ID';
 const sheets = google.sheets('v4');
@@ -38,36 +39,31 @@ function addHoursToDate(date, hours) {
 function sendChatwork(items){
   const cw_token = 'YOUR_CHATWORK_TOKEN';
   const room_id = 'YOUR_ROOM_ID';
-  const instance = axios.create({
-    baseURL: 'https://api.chatwork.com/v2/',
-    timeout: 1000,
-    headers: {'X-ChatWorkToken': cw_token}
-  });
+  
   let body = `[info][title]件名: LINEよりお問い合わせがありました。[/title]`;
   for (var key in items) {
-  	body += `[info][title]${key}: ${items[key]}[/title][/info]`;
+  	body += `[info][title]${key}[/title]${items[key]}[/info]`;
   }
   body += `[/info]`;
-  const data = {
-    body: body
-  };
-  instance.post(`rooms/${room_id}/messages`, data)
-    .then(function (res) {
-      console.log('Send Chatwork', res.status);
-      console.log(res.statusText);
-    })
-    .catch(function (err){
-      if (err.response) {
-        console.log(err.response.data);
-        console.log(err.response.status);
-        console.log(err.response.headers);
-      } else if (err.request) {
-        console.log(err.request);
-      } else {
-        console.log('Error', err.message);
-      }
-      console.log(err.config);
-    });
+  
+  axios(
+    {
+      method: 'post',
+      url: `https://api.chatwork.com/v2/rooms/${room_id}/messages`,
+      headers: {
+        'X-ChatWorkToken': cw_token
+      },
+      data: querystring.stringify({
+        body: body
+      })
+    }
+  )
+  .then((res) => {
+    console.log(res.data);
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 }
 
 
@@ -114,7 +110,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     const items = {
       "日付": jst_dt,
       "お名前": name,
-      "email": email,
+      "メールアドレス": email,
       "内容": content
     };
     sendChatwork(items);
