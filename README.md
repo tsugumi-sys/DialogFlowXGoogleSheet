@@ -1,4 +1,7 @@
 # DialogFlowXGoogleSheet
-Simple implementation of Google Dialog Flow ES fulfilment & Google Sheet API integration.
+Simple implementation of Google Dialog Flow ES fulfilment & Google Sheet API & Google Calendar API.
 
-Get user inputs and send to Google Sheet and send message to Chatworks.
+## Overview
+This is a simple implementation of reservation chatbot with DialogFlow and other Google service.
+
+First, please create your own service account of GCP.
